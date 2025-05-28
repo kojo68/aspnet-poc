@@ -40,19 +40,19 @@ jobs:
 
     # ───────── Installer ReportGenerator ─────────
     - name: Install ReportGenerator
-      run: dotnet tool install --global dotnet-reportgenerator-globaltool --prerelease
+      run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.4
 
     # ───────── Convertir Cobertura → OpenCover ─────────
     - name: Convert coverage to OpenCover
+      env:
+        DOTNET_ROLL_FORWARD: Major   # assure l’utilisation du runtime 8 disponible
       run: |
         export PATH="$PATH:$HOME/.dotnet/tools"
-        REPORT=$(find TestResults -type f -name 'coverage.cobertura.xml' | head -n 1)
-        echo "Cobertura file : $REPORT"
-        reportgenerator \
-          -reports:"$REPORT" \
-          -targetdir:coveragereport \
-          -reporttypes:Opencover \
-          -filefilters:-*.Generated.cs
+        COV=$(find TestResults -type f -name 'coverage.cobertura.xml' | head -n 1)
+        reportgenerator -reports:"$COV" \
+                        -targetdir:coveragereport \
+                        -reporttypes:Opencover
+
 
     # ───────── Analyse SonarCloud avec le rapport OpenCover ─────────
     - name: SonarCloud Scan
