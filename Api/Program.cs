@@ -12,7 +12,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-// Commit “trigger CI/CD” : ajout d’un commentaire sans impact fonctionnel
+// Commit “trigger CI/CD test1”
+// Commit “trigger CI/CD test2”
 
 app.UseHttpsRedirection();
 
