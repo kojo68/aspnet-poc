@@ -38,9 +38,9 @@ jobs:
           --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults
 
-    # ───────── Installer ReportGenerator (version stable ciblant .NET 8) ─────────
+    # ───────── Installer ReportGenerator ─────────
     - name: Install ReportGenerator
-      run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.3
+      run: dotnet tool install --global dotnet-reportgenerator-globaltool
 
     # ───────── Convertir Cobertura → OpenCover ─────────
     - name: Convert coverage to OpenCover
