@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api                     # nom du Deployment
+  labels:
+    app: api                    # label pour sélectionner les pods
+spec:
+  replicas: 1                   # nombre de pods
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - name: api
+        image: aspnet-poc:local
+        imagePullPolicy: IfNotPresent
+        # expose Kestrel sur le port 8080 comme dans les logs
+        env:
+        - name: ASPNETCORE_URLS
+          value: "http://+:8080"
+        ports:
+        - containerPort: 8080
+        readinessProbe:                            # prêt à recevoir du trafic
+          httpGet:
+            path: /weatherforecast
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /weatherforecast
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20

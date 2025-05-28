@@ -1,0 +1,76 @@
+name: CI-CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore & Build
+      run: |
+        dotnet restore Api/Api.csproj
+        dotnet build Api/Api.csproj -c Release --no-restore
+
+    - name: Run Tests
+      run: dotnet test tests/Api.Tests/Api.Tests.csproj --configuration Release --no-build --verbosity normal
+
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@v2
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with:
+        args: "-Dsonar.qualitygate.wait=true"
+
+    - name: Build & Push Docker image
+      run: |
+        docker build -t $REGISTRY/$IMAGE_NAME:${{ github.sha }} .
+        echo "${{ secrets.GITHUB_TOKEN }}" | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
+        docker push $REGISTRY/$IMAGE_NAME:${{ github.sha }}
+
+  deploy-to-k8s:
+    runs-on: ubuntu-latest
+    needs: build-and-publish 
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: '1.29.2'
+
+    # 2) Récupérer le kubeconfig stocké en secret GitHub
+    - name: Configure kubeconfig
+      run: |
+        echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+
+    # 3) Remplacer le placeholder d’image dans le manifest
+    - name: Update image tag
+      run: |
+        sed -i "s|aspnet-poc:local|$REGISTRY/$IMAGE_NAME:${{ github.sha }}|g" k8s/deployment.yaml
+
+    # 4) Appliquer les manifests
+    - name: Deploy manifests
+      run: kubectl apply -f k8s/
+
+    # 5) Attendre la disponibilité du Deployment
+    - name: Wait for rollout
+      run: kubectl rollout status deployment/api --timeout=120s
