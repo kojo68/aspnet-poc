@@ -45,7 +45,7 @@ jobs:
     # ───────── Convertir Cobertura → OpenCover ─────────
     - name: Convert coverage to OpenCover
       env:
-        DOTNET_ROLL_FORWARD: Major   # assure l’utilisation du runtime 8 disponible
+        DOTNET_ROLL_FORWARD: Major
       run: |
         export PATH="$PATH:$HOME/.dotnet/tools"
         COV=$(find TestResults -type f -name 'coverage.cobertura.xml' | head -n 1)
