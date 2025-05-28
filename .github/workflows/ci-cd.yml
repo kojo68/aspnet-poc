@@ -45,7 +45,7 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
         args: >
-          -Dsonar.coverageReportPaths=TestResults/**/coverage.cobertura.xml
+          -Dsonar.coverageReportPaths=coverage.cobertura.xml
           -Dsonar.qualitygate.wait=true
 
     # ───────── Build & Push image Docker ─────────
