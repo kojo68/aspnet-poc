@@ -15,7 +15,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # ───────── Clonage ─────────
     - uses: actions/checkout@v4
+
+    # ───────── SDK .NET (9 preview ici, change si tu repasses en 8) ─────────
     - uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
@@ -27,7 +30,7 @@ jobs:
         dotnet restore Api/Api.csproj
         dotnet build  Api/Api.csproj -c Release --no-restore
 
-    # ───────── Tests + couverture ─────────
+    # ───────── Tests + couverture Cobertura ─────────
     - name: Run Tests with coverage
       run: |
         dotnet test tests/Api.Tests/Api.Tests.csproj \
@@ -35,27 +38,14 @@ jobs:
           --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults
 
-    # ───────── ReportGenerator pour convertir en OpenCover ─────────
-    - name: Install ReportGenerator
-      run: dotnet tool install --global dotnet-reportgenerator-globaltool
-
-    - name: Convert coverage to OpenCover
-      run: |
-        export PATH="$PATH:$HOME/.dotnet/tools"
-        reportgenerator \
-          -reports:TestResults/**/coverage.cobertura.xml \
-          -targetdir:coveragereport \
-          -reporttypes:Opencover
-
-    # ───────── Analyse SonarCloud ─────────
+    # ───────── Analyse SonarCloud (lit Cobertura) ─────────
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@v2
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
-        # attente gate + chemin du rapport
         args: >
-          -Dsonar.cs.opencover.reportsPaths=coveragereport/coverage.opencover.xml
+          -Dsonar.coverageReportPaths=TestResults/**/coverage.cobertura.xml
           -Dsonar.qualitygate.wait=true
 
     # ───────── Build & Push image Docker ─────────
