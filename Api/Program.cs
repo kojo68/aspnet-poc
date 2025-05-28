@@ -12,6 +12,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// Commit “trigger CI/CD” : ajout d’un commentaire sans impact fonctionnel
+
 app.UseHttpsRedirection();
 
 var summaries = new[]
