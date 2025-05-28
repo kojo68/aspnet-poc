@@ -40,7 +40,7 @@ jobs:
 
     # ───────── Installer ReportGenerator ─────────
     - name: Install ReportGenerator
-      run: dotnet tool install --global dotnet-reportgenerator-globaltool
+      run: dotnet tool install --global dotnet-reportgenerator-globaltool --prerelease
 
     # ───────── Convertir Cobertura → OpenCover ─────────
     - name: Convert coverage to OpenCover
