@@ -38,14 +38,30 @@ jobs:
           --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults
 
-    # ───────── Analyse SonarCloud (lit Cobertura) ─────────
+    # ───────── Installer ReportGenerator (version stable ciblant .NET 8) ─────────
+    - name: Install ReportGenerator
+      run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.3
+
+    # ───────── Convertir Cobertura → OpenCover ─────────
+    - name: Convert coverage to OpenCover
+      run: |
+        export PATH="$PATH:$HOME/.dotnet/tools"
+        REPORT=$(find TestResults -type f -name 'coverage.cobertura.xml' | head -n 1)
+        echo "Cobertura file : $REPORT"
+        reportgenerator \
+          -reports:"$REPORT" \
+          -targetdir:coveragereport \
+          -reporttypes:Opencover \
+          -filefilters:-*.Generated.cs
+
+    # ───────── Analyse SonarCloud avec le rapport OpenCover ─────────
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@v2
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
         args: >
-          -Dsonar.coverageReportPaths=coverage.cobertura.xml
+          -Dsonar.cs.opencover.reportsPaths=coveragereport/coverage.opencover.xml
           -Dsonar.qualitygate.wait=true
 
     # ───────── Build & Push image Docker ─────────
